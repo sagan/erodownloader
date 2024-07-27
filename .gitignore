@@ -1,0 +1,6 @@
+erodownloader.exe
+erodownloader
+.local/
+#/web/dist/
+node_modules/
+/dist/

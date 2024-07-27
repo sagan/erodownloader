@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Erodownloader</title>
+    <script>
+      (() => {
+        let urlParams = new URLSearchParams(location.search);
+        // token: api auth token.
+        // api: api url.
+        // get: use get method to access api.
+        let params = ["token", "api", "get"];
+        for (let param of params) {
+          let variable = "__" + param.toUpperCase() + "__";
+          window[variable] = localStorage.getItem(param) || "";
+          if (urlParams.has(param)) {
+            window[variable] = urlParams.get(param);
+            if (window[variable]) {
+              localStorage.setItem(param, window[variable]);
+            } else {
+              localStorage.removeItem(param);
+            }
+          }
+        }
+        if (urlParams.toString() != "") {
+          history.replaceState(null, "", location.origin + location.pathname);
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index.css">
+  </head>
+  <body>
+    <div id="root" class="flex flex-col"></div>
+  </body>
+</html>
