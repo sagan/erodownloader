@@ -37,6 +37,6 @@ func get(cmd *cobra.Command, args []string) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to get client status: %w", err)
 	}
-	client.PrintStatus(os.Stdout, clientStatus)
+	client.PrintStatus(os.Stdout, clientInstance, clientStatus)
 	return nil
 }

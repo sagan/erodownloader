@@ -353,7 +353,7 @@ func Assign(dst any, src any, excludeFieldIndexes []int) {
 // Similar to exec.LookPath, but also look up for dir of self executable file.
 func LookPathWithSelfDir(name string) (string, error) {
 	path, err := exec.LookPath(name)
-	if err != nil {
+	if err != nil && !filepath.IsAbs(name) {
 		if self, err := os.Executable(); err == nil {
 			selfDir := filepath.Dir(self)
 			binarypath := filepath.Join(selfDir, name)

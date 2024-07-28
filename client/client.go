@@ -187,8 +187,11 @@ func CreateClientInternal(name string, clientConfig *config.ClientConfig, config
 	return regInfo.Creator(name, clientConfig, config)
 }
 
-func PrintStatus(output io.Writer, s Status) {
-	fmt.Fprintf(output, "DownloadSpeed: %s\n", util.BytesSize(float64(s.DownloadSpeed())))
+func PrintStatus(output io.Writer, clientInstance Client, s Status) {
+	fmt.Fprintf(output, "%-10s  %-15s  %-15s  %s\n", "Client", clientInstance.GetConfig().Name,
+		fmt.Sprintf("↓Spd: %s/s", util.BytesSize(float64(s.DownloadSpeed()))),
+		fmt.Sprintf("// %s; save_path: %s", clientInstance.GetConfig().Type, clientInstance.GetConfig().SavePath),
+	)
 }
 
 var _ DownloadTask = (*BaseDownloadTask)(nil)

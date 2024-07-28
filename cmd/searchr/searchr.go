@@ -68,8 +68,14 @@ func searchr(cmd *cobra.Command, args []string) (err error) {
 	if util.CountNonZeroVariables(add, addAsCompleted, addAsSkip) > 1 {
 		return fmt.Errorf("--add, --add-completed and --add-skip flags are NOT compatible")
 	}
-	if !add && checkPtoolSite != "" {
-		return fmt.Errorf("--check-ptool-site must be used with --add flag")
+	var ptoolBinary string
+	if checkPtoolSite != "" {
+		if !add {
+			return fmt.Errorf("--check-ptool-site must be used with --add flag")
+		}
+		if ptoolBinary, err = util.LookPathWithSelfDir("ptool"); err != nil {
+			return fmt.Errorf("ptool binary not found: %w", err)
+		}
 	}
 	minResourceSize, _ := util.RAMInBytes(minResourceSizeStr)
 	maxResourceSize, _ := util.RAMInBytes(maxResourceSizeStr)
@@ -159,7 +165,7 @@ func searchr(cmd *cobra.Command, args []string) (err error) {
 				continue
 			}
 			if resource.Number() != "" && checkPtoolSite != "" {
-				exists, err := helper.SearchPtoolSite(checkPtoolSite, resource.Number(), true, true)
+				exists, err := helper.SearchPtoolSite(ptoolBinary, checkPtoolSite, resource.Number(), true, true)
 				if err != nil {
 					log.Warnf("Failed to search resource %s on ptool site: %v", resource.Number(), err)
 					continue

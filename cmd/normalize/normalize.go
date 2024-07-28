@@ -174,10 +174,12 @@ func normalize(cmd *cobra.Command, args []string) (err error) {
 
 	errorCnt := 0
 	transformers := []any{[]string{"decensorship", "correctext", "decompress", "text", "nocredit", "denesting"}, -1}
-	if !noFlac {
-		if _, err := util.LookPathWithSelfDir("flac"); err != nil {
+	if !noFlac && !optionValues.Has("flac_binary") {
+		binpath, err := util.LookPathWithSelfDir("flac")
+		if err != nil {
 			log.Fatalf(`flac binary not found, please add "flac" binary to PATH`)
 		}
+		optionValues.Set("flac_binary", binpath)
 		transformers = append(transformers, "wav")
 	}
 	transformers = append(transformers, "noempty", "normalizename")

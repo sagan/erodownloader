@@ -9,6 +9,7 @@ import (
 	"github.com/sagan/erodownloader/cmd/watch"
 	"github.com/sagan/erodownloader/config"
 	"github.com/sagan/erodownloader/schema"
+	"github.com/sagan/erodownloader/util"
 	"github.com/sagan/erodownloader/util/helper"
 )
 
@@ -40,6 +41,10 @@ func mark(cmd *cobra.Command, args []string) (err error) {
 	if checkPtoolSite == "" {
 		return nil
 	}
+	ptoolBinary, err := util.LookPathWithSelfDir("ptool")
+	if err != nil {
+		return fmt.Errorf("ptool binary not found: %w", err)
+	}
 
 	db := config.Db
 	var resourceDownloads []*schema.ResourceDownload
@@ -66,7 +71,7 @@ mainloop:
 		var exists bool
 		for {
 			tries++
-			exists, err = helper.SearchPtoolSite(checkPtoolSite, resourceDownload.Number, true, true)
+			exists, err = helper.SearchPtoolSite(ptoolBinary, checkPtoolSite, resourceDownload.Number, true, true)
 			if err == nil {
 				break
 			}

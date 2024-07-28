@@ -247,12 +247,15 @@ func GetNewFilePath(dir string, name string) (fullpath string) {
 	}
 }
 
-func SearchPtoolSite(site string, keyword string, includeDead bool, matchExact bool) (exists bool, err error) {
+func SearchPtoolSite(binary, site, keyword string, includeDead bool, matchExact bool) (exists bool, err error) {
 	minSeeders := "1"
 	if includeDead {
 		minSeeders = "-1"
 	}
-	cmd := exec.Command("ptool", "search", "--min-seeders", minSeeders, "--json", site, keyword)
+	if binary == "" {
+		binary = "ptool"
+	}
+	cmd := exec.Command(binary, "search", "--min-seeders", minSeeders, "--json", site, keyword)
 	output, err := cmd.Output()
 	if err != nil {
 		return false, err
