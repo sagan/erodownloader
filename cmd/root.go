@@ -42,8 +42,8 @@ func Execute() {
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&flags.DumpHeaders, "dump-headers", "", false,
 		`Dump HTTP headers to log (error level)`)
-	RootCmd.PersistentFlags().BoolVarP(&flags.DumpBody, "dump-body", "", false,
-		`Dump HTTP body to log (error level)`)
+	RootCmd.PersistentFlags().BoolVarP(&flags.DumpBodies, "dump-bodies", "", false,
+		`Dump HTTP headers and bodies to log (error level)`)
 	RootCmd.PersistentFlags().BoolVarP(&config.Test1, "test1", "", false, "test flag1")
 	RootCmd.PersistentFlags().BoolVarP(&config.Test2, "test2", "", false, "test flag2")
 	RootCmd.PersistentFlags().StringVarP(&config.ConfigFile, "config", "", config.DefaultConfigFile, "Config file")

@@ -31,6 +31,10 @@ import (
 	"github.com/sagan/erodownloader/util/stringutil"
 )
 
+func FormatDate(t int64) string {
+	return time.Unix(t, 0).Format("2006-01-02")
+}
+
 func FormatTime(t int64) string {
 	return time.Unix(t, 0).Format("2006-01-02 15:04:05")
 }

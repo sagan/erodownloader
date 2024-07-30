@@ -8,6 +8,8 @@ interface Resource {
   author: string;
   tags: string[];
   resource_id: string;
+  /** unix timestamp (seconds) */
+  time: number;
 }
 
 interface Meta {

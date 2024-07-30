@@ -12,12 +12,12 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
 
 	_ "github.com/mithrandie/csvq-driver"
-	"github.com/sagan/erodownloader/constants"
 	"github.com/sagan/erodownloader/httpclient"
 	"github.com/sagan/erodownloader/schema"
 	"github.com/sagan/erodownloader/site"
@@ -54,6 +54,22 @@ type DlsiteIndexRecord struct {
 	FolderMp3  sql.NullString `db:"MP3标注一,omitempty"` // "01 - 同步MP3完成合集"
 	FolderMp32 sql.NullString `db:"MP3标注二,omitempty"` // "M - 0030"
 	site       string
+}
+
+// Time implements site.Resource.
+func (d *DlsiteIndexRecord) Time() int64 {
+	date := ""
+	if notNull(d.UpdateDate.String) {
+		date = d.UpdateDate.String
+	} else if notNull(d.SellDate.String) {
+		date = d.SellDate.String
+	}
+	if date != "" {
+		if t, err := time.Parse("2006-01-02", date); err == nil {
+			return t.Unix()
+		}
+	}
+	return 0
 }
 
 func (d *DlsiteIndexRecord) Author() string {
@@ -168,22 +184,16 @@ func (s *Site) FindResourceFiles(id string) (files site.Files, err error) {
 }
 
 func (s *Site) FindResources(qs string) (resources site.Resources, err error) {
-	var query url.Values
-	rawMode := false
-	if qs != "" && qs != constants.NONE {
-		if strings.ContainsAny(qs, " \r\n\t") {
-			rawMode = true
-		} else {
-			query, err = url.ParseQuery(qs)
-			if err != nil {
-				return nil, fmt.Errorf("malformed qs: %w", err)
-			}
-		}
+	query, err := url.ParseQuery(qs)
+	if err != nil {
+		return nil, fmt.Errorf("malformed qs: %w", err)
 	}
-
+	indexFile := DLSITE_INDEX + ".csv"
 	if s.db == nil {
-		if err := s.downloadResourceIndexes(); err != nil {
-			return nil, err
+		if !util.FileExists(filepath.Join(s.dir, indexFile)) || !query.Has("cache") {
+			if err := s.downloadResourceIndexes(); err != nil {
+				return nil, err
+			}
 		}
 		if s.db, err = sqlx.Open("csvq", s.dir); err != nil {
 			return nil, fmt.Errorf("failed to create index db: %w", err)
@@ -194,9 +204,12 @@ func (s *Site) FindResources(qs string) (resources site.Resources, err error) {
 	sql := fmt.Sprintf(`SELECT
 音声号码, MEGA链接, 录入日期, TAG, 声优, 标题, 备注, 类型, 社团, 销售日期, 最后修改日期, 原档容量, MP3容量,
 原档标注一, 原档标注二, MP3标注一, MP3标注二
-FROM %s WHERE 1 = 1 `, fmt.Sprintf("`%s.csv`", DLSITE_INDEX))
+FROM %s WHERE `, fmt.Sprintf("`%s`", indexFile))
 	var args []any
-	if !rawMode {
+	if rawquery := query.Get("raw"); rawquery != "" {
+		sql += rawquery
+	} else {
+		sql += "1 = 1 "
 		if number := query.Get("number"); number != "" {
 			sql += "and 音声号码 = ? "
 			args = append(args, number)
@@ -261,8 +274,6 @@ FROM %s WHERE 1 = 1 `, fmt.Sprintf("`%s.csv`", DLSITE_INDEX))
 			}
 			sql += " limit " + fmt.Sprint(limit)
 		}
-	} else if query := strings.TrimSpace(qs); query != "" {
-		sql += "and ( " + query + " )"
 	}
 	log.Tracef("sql: %s, args: %v", sql, args)
 	if err := s.db.Select(&records, sql, args...); err != nil {

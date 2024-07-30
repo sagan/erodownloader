@@ -4,6 +4,8 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -50,7 +52,6 @@ func Xlsx2Csv(xlsxFile string) error {
 	var notBlank bool
 	var data string
 	var numEmptyRows int
-	handleHeaderRow := true
 	ignoreEmptyRow := true
 	for i, row := range rows {
 		if len(row) < nColsMax {
@@ -69,11 +70,26 @@ func Xlsx2Csv(xlsxFile string) error {
 				continue
 			}
 		}
-		if handleHeaderRow {
-			handleHeaderRow = false
-		}
-		if i == len(rows)-1 {
-			fmt.Printf("last row: %d - %v\n", len(row), row)
+		// it's a ugly workaround. Excel store date / time as float. e.g. 2022-01-15 => 44576 .
+		// However, excelize GetRows / GetValue... does not handle these values quite well.
+		// If RawCellValue is false, date cell is readad as local string (e.g. 01-15-22 in en-US), which is unpredictable.
+		// (For some reason, ShortDatePattern does NOT work in some cases)
+		// If RawCellValue is true, date cell is readed as raw float.
+		if i > 0 && len(row) <= len(rows[0]) {
+			for j := range row {
+				if !strings.Contains(rows[0][j], "日期") && !strings.Contains(strings.ToLower(rows[0][j]), "date") {
+					continue
+				}
+				f, err := strconv.ParseFloat(row[j], 64)
+				if err != nil {
+					continue
+				}
+				t, err := excelize.ExcelDateToTime(f, false)
+				if err != nil {
+					continue
+				}
+				row[j] = t.Format("2006-01-02")
+			}
 		}
 		if err := writer.Write(row); err != nil {
 			return err

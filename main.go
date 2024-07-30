@@ -11,6 +11,7 @@ import (
 	_ "github.com/sagan/erodownloader/scraper/all"
 	_ "github.com/sagan/erodownloader/site/all"
 	_ "github.com/sagan/erodownloader/transform/all"
+	_ "github.com/sagan/erodownloader/util/osutil"
 )
 
 func main() {

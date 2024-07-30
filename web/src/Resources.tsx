@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet";
 import { Table, AutoSizer, Column, SortIndicator } from "react-virtualized";
 import { MetaObject, Resource, db } from "./db";
 import { SiteResourceKey, fetchSiteResources } from "./api";
+import { format_date } from "./funcs";
 
 interface ResourcesProps {
   sites: string[];
@@ -120,8 +121,18 @@ export default function Resources({ sites, resources, meta }: ResourcesProps) {
                     width={300}
                   />
                   <Column
-                    dataKey="actions"
+                    dataKey="time"
                     disableSort={false}
+                    className="column column-time"
+                    headerRenderer={headerRenderer}
+                    cellRenderer={({ cellData }) => (
+                      <>{format_date(cellData)}</>
+                    )}
+                    width={100}
+                  />
+                  <Column
+                    dataKey="actions"
+                    disableSort={true}
                     className="column column-actions"
                     headerRenderer={headerRenderer}
                     cellRenderer={({ rowData, rowIndex }) => <>{rowIndex}</>}
@@ -159,6 +170,7 @@ export default function Resources({ sites, resources, meta }: ResourcesProps) {
           tags: r.tags,
           number: r.number,
           author: r.author,
+          time: r.time,
         });
       });
       await db.transaction("rw", [db.resources], async () => {

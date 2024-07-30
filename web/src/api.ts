@@ -43,12 +43,15 @@ interface ResourceDownload {
 }
 
 interface SiteResource {
+  /**  site resource id, e.g. "path=...&..." */
   id: string;
   author: string;
   number: string;
   size: number;
   title: string;
   tags: string[];
+  /** modification timestamp in seconds */
+  time: number;
 }
 
 type SiteResourceKey = keyof SiteResource;

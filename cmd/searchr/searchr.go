@@ -2,8 +2,10 @@ package searchr
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"slices"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -28,6 +30,7 @@ var command = &cobra.Command{
 }
 
 var (
+	cacheOnly          = false
 	sum                = false
 	add                = false
 	addAsCompleted     = false
@@ -44,6 +47,7 @@ var (
 )
 
 func init() {
+	command.Flags().BoolVarP(&cacheOnly, "cache", "", false, "Use cached index file only")
 	command.Flags().BoolVarP(&sum, "sum", "", false, "Show summary only")
 	command.Flags().BoolVarP(&force, "force", "f", false, "Force do action (Do NOT prompt for confirm)")
 	command.Flags().BoolVarP(&add, "add", "", false, "Add resources to download queue")
@@ -82,6 +86,18 @@ func searchr(cmd *cobra.Command, args []string) (err error) {
 	sitename := args[0]
 	qs := args[1]
 
+	if qs == constants.NONE {
+		qs = ""
+	} else if strings.ContainsAny(qs, " \t\r\n") {
+		qs = "raw=" + url.QueryEscape(qs)
+	}
+	if cacheOnly {
+		if qs != "" {
+			qs += "&"
+		}
+		qs += "cache=1"
+	}
+
 	siteInstance, err := site.CreateSite(sitename)
 	if err != nil {
 		return fmt.Errorf("failed to create site: %w", err)
@@ -102,25 +118,35 @@ func searchr(cmd *cobra.Command, args []string) (err error) {
 		})
 	}
 	if sort != constants.NONE {
+		less, more := -1, 1
+		if order == "desc" {
+			less, more = more, less
+		}
 		slices.SortStableFunc(resources, func(a, b site.Resource) int {
 			switch sort {
+			case "time":
+				if a.Time() < b.Time() {
+					return less
+				} else if a.Time() > b.Time() {
+					return more
+				}
 			case "size":
 				if a.Size() < b.Size() {
-					return -1
+					return less
 				} else if a.Size() > b.Size() {
-					return 1
+					return more
 				}
 			case "title":
 				if a.Title() < b.Title() {
-					return -1
+					return less
 				} else if a.Title() > b.Title() {
-					return 1
+					return more
 				}
 			case "author":
 				if a.Author() < b.Author() {
-					return -1
+					return less
 				} else if a.Author() > b.Author() {
-					return 1
+					return more
 				}
 			}
 			return 0

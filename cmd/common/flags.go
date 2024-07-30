@@ -12,6 +12,7 @@ var ResourceSortFlag = &cmd.EnumFlag{
 		{"title", ""},
 		{"author", ""},
 		{"size", ""},
+		{"time", ""},
 	},
 }
 

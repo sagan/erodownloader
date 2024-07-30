@@ -37,6 +37,7 @@ type Resource interface {
 	Author() string // 作者 / 社团 / 公司
 	Size() int64    // not guaranteed to be accurate
 	Tags() schema.Tags
+	Time() int64 // modified unix timestampp (seconds)
 }
 
 type Resources []Resource
@@ -138,6 +139,9 @@ func (rs Resources) Print(output io.Writer) {
 	fmt.Fprintf(output, "%-*s"+format, nameWidth, "Name", "Size", "Number", "Details")
 	for _, r := range rs {
 		var details []string
+		if t := r.Time(); t > 0 {
+			details = append(details, util.FormatDate(t))
+		}
 		if tags := r.Tags(); len(tags) > 0 {
 			details = append(details, strings.Join(tags, ","))
 		}
@@ -165,6 +169,7 @@ func (rs Resources) MarshalJSON() ([]byte, error) {
 			"author": r.Author(),
 			"size":   r.Size(),
 			"tags":   r.Tags(),
+			"time":   r.Time(),
 		})
 	}
 	return json.Marshal(resources)

@@ -3,6 +3,6 @@ package flags
 
 var (
 	DumpHeaders = false
-	DumpBody    = false
+	DumpBodies  = false
 	Proxy       = ""
 )
