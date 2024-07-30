@@ -1,0 +1,5 @@
+package osutil
+
+func init() {
+
+}
